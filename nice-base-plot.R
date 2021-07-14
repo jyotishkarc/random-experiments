@@ -18,5 +18,5 @@ abline(h=seq(0,1,0.1), v=seq(1,5, 1), lty=3, col="gray")
 mtext(side=2, line=2, "Accuracy Rate\n", col="black", 
       font=2,cex=0.8)
 
-legend(4.3, 0.24, legend=c("Participant 1", "Participant 2", "Participant 3"),
+legend(4.2, 0.24, legend=c("Participant 1", "Participant 2", "Participant 3"),
        col=c("red", "blue","black"), lty=1, cex=1, lwd = 2)
