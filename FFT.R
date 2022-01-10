@@ -22,5 +22,3 @@ FFT <- function(P){
   
   return(y)
 }
-
-#Test
