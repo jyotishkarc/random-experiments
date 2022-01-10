@@ -1,13 +1,13 @@
 library(magrittr)
 
-theta <- 2
+theta <- 3
 N <- 100
 X <- rcauchy(N, theta, 1)
 
 mle.cauchy <- function(X, method = c("NR","fisher"), tol = 1E-6){
    
    differ <- tol + 1
-   theta.old.NR <- theta.old.fisher <- mean(X)
+   theta.old.NR <- theta.old.fisher <- median(X)
    
    print(method)
    
@@ -27,7 +27,7 @@ mle.cauchy <- function(X, method = c("NR","fisher"), tol = 1E-6){
          differ <- abs(theta.new.NR - theta.old.NR)
          
          if(differ <= tol){
-            print(theta.new.NR)
+            cat("NR gives",theta.new.NR,"\n")
             break
          }
          
@@ -49,7 +49,7 @@ mle.cauchy <- function(X, method = c("NR","fisher"), tol = 1E-6){
          differ <- abs(theta.new.fisher - theta.old.fisher)
          
          if(differ <= tol){
-            print(theta.new.fisher)
+            cat("Fisher's Scoring gives",theta.new.fisher)
             break
          }
          
