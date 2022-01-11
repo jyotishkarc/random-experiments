@@ -106,8 +106,8 @@ X <- matrix(0, nrow = N, ncol = d)
 U <- runif(N)
 
 init.mu1 <- c(0,0,0,0)
-init.mu2 <- c(1,1,4,-2)
-init.mu3 <- c(0,1,3,0)
+init.mu2 <- c(0,1,3,0)
+init.mu3 <- c(1,1,4,-2)
 
 init.sigma1 <- diag(c(1,1,1,1))
 init.sigma2 <- diag(c(1,2,0.5,1))
@@ -131,13 +131,29 @@ for(i in 1:N){
 difference <- 10
 count <- 1
 
-# theta <- list(p, init.mu1, init.mu2, init.mu3,
-#               init.sigma1, init.sigma2, init.sigma3,
-#               init.ind.1, init.ind.2, init.ind.3)
-
 theta <- list(p, init.mu1, init.mu2, init.mu3,
               init.sigma1, init.sigma2, init.sigma3,
               init.ind.1, init.ind.2, init.ind.3)
+
+H <- km.pp(X,3)
+
+if(FALSE){
+   base.p <- as.numeric(table(H[[1]])) %>% median()
+   base.mu1 <- H[[2]][1,]
+   base.mu2 <- H[[2]][2,]
+   base.mu3 <- H[[2]][3,]
+   base.sigma1 <- X[which(H[[1]] == 1),] %>% cov()
+   base.sigma2 <- X[which(H[[1]] == 2),] %>% cov()
+   base.sigma3 <- X[which(H[[1]] == 3),] %>% cov()
+   base.ind1 <- base.ind2 <- base.ind3 <- numeric(N)
+   base.ind1[which(H[[1]] == 1)] <- 1
+   base.ind2[which(H[[1]] == 2)] <- 1
+   base.ind3[which(H[[1]] == 3)] <- 1
+   
+   theta <- list(base.p, base.mu1, base.mu2, base.mu3,
+                 base.sigma1, base.sigma2, base.sigma3,
+                 base.ind1, base.ind2, base.ind3)
+}
 
 while(difference > tol){
    new.theta <- em.est(X, theta)
