@@ -103,7 +103,6 @@ p <- 0.3
 K <- floor(N/3)
 tol <- 1E-5
 X <- matrix(0, nrow = N, ncol = d)
-U <- runif(N)
 
 init.mu1 <- c(0,0,0,0)
 init.mu2 <- c(0,1,3,0)
@@ -118,6 +117,8 @@ init.ind.2 <- c(rep(0,K),rep(1,K),rep(0,N-2*K))
 init.ind.3 <- c(rep(0,N-K),rep(1,K))
 
 #Sampling from the mixture
+U <- runif(N)
+
 for(i in 1:N){
    if(U[i] <= p^2){
       X[i,] <- rmvnorm(1, mean = init.mu1, sigma = init.sigma1)
