@@ -1,4 +1,5 @@
 library(mvtnorm)
+library(emdbook)
 
 log.lh <- function(X, theta){
    N <- nrow(X)
@@ -141,7 +142,7 @@ theta <- list(p, init.mu1, init.mu2, init.mu3,
 while(difference > tol){
    new.theta <- em.est(X, theta)
    print(count)
-   difference <- abs(log.lh(X, new.theta) - log.lh(X, theta))
+   difference <- abs((log.lh(X, new.theta) - log.lh(X, theta))/log.lh(X, theta))
    print(difference)
    
    if(difference <= tol){
