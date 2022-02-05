@@ -1,0 +1,21 @@
+---
+title: "Hello"
+author: "Jyotishka"
+
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+name <- c("A","B","C","D")
+animal <- c("E","F","G","H")
+food <- c("F1","F2","F3","F4")
+
+X <- data.frame(name, animal, food)
+X
+```
+
