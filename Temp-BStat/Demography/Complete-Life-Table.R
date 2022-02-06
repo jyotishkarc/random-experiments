@@ -94,10 +94,6 @@ complete.LT <- function(abridged.LT){
                                     return(val %>% as.numeric() %>% round(1))}))
          
          rownames(complete[[i]][[j]]) <- 0:85
-         # colnames(complete[[i]][[j]]) <- c(expression("q"["x"]),
-         #                                   expression("l"["x"]),
-         #                                   expression("L"["x"]),
-         #                                   expression("e"["x"]))
       }
    }
    
