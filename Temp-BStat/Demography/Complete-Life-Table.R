@@ -1,6 +1,5 @@
 
 ########## Function for Six-Point Lagrangian Interpolation
-
 inter <- function(target, x, vec){
    S <- 0
    num <- length(x)
@@ -21,8 +20,8 @@ inter <- function(target, x, vec){
    return(S)
 }
 
-########## Index of Neighbours of Target
 
+########## Index of Neighbours of Target
 neighbours <- function(target, len, vec){
    
    temp <- which(is.na(vec) == FALSE)
@@ -44,7 +43,6 @@ neighbours <- function(target, len, vec){
 
 
 #################### Function for Complete Life Table
-
 complete.LT <- function(abridged.LT){
    
    abridged.LT <- abridged.LT[-c(20,40),]
@@ -84,7 +82,7 @@ complete.LT <- function(abridged.LT){
          e[1] <- abridged.LT[(19*(i-1)+2),(4*j+1)]
          e[85] <- abridged.LT[(19*i),(4*j+1)]
          
-         complete[[i]][[j]] <- data.frame("Age" = 0:85,
+         complete[[i]][[j]] <- data.frame(#"Age" = 0:85,
             "q_x" = sapply(c(abridged.LT[(19*(i-1)+1),(4*j-2)],q), function(val){
                                     return(val %>% as.numeric() %>% round(4))}),
             "l_x" = sapply(c(100000,l[1:85]), function(val){
@@ -94,7 +92,7 @@ complete.LT <- function(abridged.LT){
             "e_x" = sapply(c(abridged.LT[(19*(i-1)+1),(4*j+1)],e), function(val){
                                     return(val %>% as.numeric() %>% round(1))}))
          
-         rownames(complete[[i]][[j]]) <- 1:86
+         rownames(complete[[i]][[j]]) <- 0:85
       }
    }
    
