@@ -64,15 +64,15 @@ complete.LT <- function(abridged.LT){
          
          q <- L <- e <- c()
          
-         for(x in 2:84){
+         for(x in 1:84){
             q[x] <- 1 - l[x+1]/l[x]
             L[x] <- mean(c(l[x],l[x+1]))
          }
          
-         q[1] <- abridged.LT[(19*(i-1)+2),(4*j-2)]
-         q[85] <- 0
+         # q[1] <- abridged.LT[(19*(i-1)+2),(4*j-2)]
+         # q[85] <- as.character("NA")
          
-         L[1] <- abridged.LT[(19*(i-1)+2),(4*j)]
+         # L[1] <- abridged.LT[(19*(i-1)+2),(4*j)]
          L[85] <- abridged.LT[(19*i),(4*j)]
          
          for(x in 2:84){
@@ -83,8 +83,9 @@ complete.LT <- function(abridged.LT){
          e[85] <- abridged.LT[(19*i),(4*j+1)]
          
          complete[[i]][[j]] <- data.frame(#"Age" = 0:85,
-            "q_x" = sapply(c(abridged.LT[(19*(i-1)+1),(4*j-2)],q), function(val){
+            "q_x" = c(sapply(c(abridged.LT[(19*(i-1)+1),(4*j-2)],q), function(val){
                                     return(val %>% as.numeric() %>% round(4))}),
+                      as.character("NA")),
             "l_x" = sapply(c(100000,l[1:85]), function(val){
                                     return(val %>% as.numeric() %>% ceiling())}), 
             "L_x" = sapply(c(abridged.LT[(19*(i-1)+1),(4*j)],L), function(val){
@@ -93,6 +94,10 @@ complete.LT <- function(abridged.LT){
                                     return(val %>% as.numeric() %>% round(1))}))
          
          rownames(complete[[i]][[j]]) <- 0:85
+         # colnames(complete[[i]][[j]]) <- c(expression("q"["x"]),
+         #                                   expression("l"["x"]),
+         #                                   expression("L"["x"]),
+         #                                   expression("e"["x"]))
       }
    }
    
