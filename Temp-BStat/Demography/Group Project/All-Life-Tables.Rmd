@@ -1,0 +1,1282 @@
+---
+title: "Hello"
+author: "Jyotishka"
+output:
+  pdf_document:
+    keep_tex: true
+  html_document:
+    df_print: paged
+fontsize: 14pt
+geometry: margin=0.9in
+mainfont: cochineal
+fontfamily: libertine
+sansfont: Linux Biolinum O
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(magrittr)
+library(kableExtra)
+library(tinytex)
+library(rio)
+
+source('~/R/R Codes/Experiments with R/Temp-BStat/Demography/Group Project/Complete-Life-Table.R')
+
+# ALT_States <- import_list("Temp-BStat/Demography/ALT_States.xlsx")
+ALT_States <- import_list("D:/My Documents/R/R Codes/Experiments with R/Temp-BStat/Demography/Group Project/ALT_States.xlsx")
+
+states <- ALT_States %>% names()
+
+```
+
+\section*{Introduction:}
+In the words of William Farr, often regarded as one of the founders of medical statistics, \begin{center}\emph{"Life table is the ‘Biometer’ of the population"}. \end{center} The life table is a mathematical table which gives the life history of a hypothetical group or cohort as it is gradually diminished by deaths. It gives the probabilities of death and survival at various age groups. A life table summarizes the mortality experience of a population during the period of study and provides concise measures of the longevity of that population.<br/>
+
+The data for construction of life tables considers both deaths and the population exposed to risk of death classified by age.<br/>
+
+In India, life expectancy at various broad age groups has been estimated through Sample 
+Registration System (SRS) since 1970-75. The Sample Registration System (SRS) is a large-scale demographic sample survey based on the mechanism of a dual record system with the objective of providing reliable estimates of fertility and mortality indicators at State and National levels for rural and urban areas separately. The estimated age-specific death rates derived from the SRS provide the necessary database for undertaking construction of abridged life tables. To adjust for the sampling fluctuation and for augmenting the sample size, five-year average is compiled for estimating age-specific death rates separately for rural and urban areas, both for male and female.<br/>
+
+
+\section*{Objective:}
+This following project was undertaken with the objective of creating Complete Life Tables using data available in Abridged Life Tables. <br/>
+
+
+\section*{Datasets:}
+ The data for this project was obtained from the SRS Life Tables under the Vital Statistics section of the official site of Census India (\href{https://www.censusindia.gov.in}{https://www.censusindia.gov.in}), as published by the Office of the Registrar General \& Census Commissioner of India (\href{ https://www.censusindia.gov.in/vital_statistics/Appendix\_SRS\_Based\_Life\_Table.html}{Click here}). <br/><br/>
+ 
+The present report covers the life tables for the periods 2014-18. The life table has been constructed for all India and bigger States/Union Territories (having population 10 million and more) along with Himachal Pradesh (\href{ https://censusindia.gov.in/Vital_Statistics/SRS_Life_Table/SRS\%20based\%20Abridged\%20Life\%20Tables\%202014-18.pdf}{Click here to view PDF}), for both male and female populations as well as rural and urban populations.
+
+
+\section*{Definitions:}
+Let $l_0$ be our original cohort (population) (say of 100000 individuals).
+\begin{enumerate}
+    \item ${}_nq_x=\mathbb{P}~$(A randomly chosen individual of the cohort dies between the age  of $x$ and age $x+n$)
+    \item $l_x=\mathbb{E}~$[No. of individuals surviving at exact age $x$ out of the original cohort]
+    \item ${}_nL_x=\mathbb{E}~$[No. of person-years lived between ages $x$ and $x+n$ years]
+    \item $e_x=\mathbb{E}~$[Life remaining at age $x$]
+\end{enumerate}
+Note that we have used the notation: $q_x={}_1q_x$ and $L_x={}_1L_x$. Also $L_{85}={}_{\infty}L_{85}$ and so on.<br/>
+
+
+\section*{Interpolation Techniques:}
+For this project, we have tried using a conventional and extensively used
+method for expanding an abridged life table - the six-point Lagrangian Interpolation. Other methods of interpolation include King’s Osculatory Interpolation and Heligman-Pollard Model. However, the Six-point Lagrangian Interpolation method produces the best estimates of complete life tables from five-year abridged life tables\cite{comparison}. The formula below expresses each non-tabulated value $l_x$ as a linear combination of six particular polynomials in x, each of degree five,
+\begin{equation}l_x=\displaystyle\sum_{i=1}^6 \dfrac{\prod_{j\neq i} (x-x_j)}{\prod_{j\neq i} (x_i-x_j)}\cdot l_{x_i}\end{equation}
+where $x_1, ~x_2,\dots~ x_6$ are the tabular ages nearest to $x$.<br/><br/>
+
+\textbf{Procedure:}\cite{johnson}
+\begin{enumerate}
+    \item Start with the abridged table. We know the values of $l_{5i},~i\in\{0,~1,\ldots17\}$ and $l_1$. Let $D=\{l_1,~l_{5i}: ~i\in\{0,~1,\ldots17\}\}$. Thus $D$ is completely known.
+    \item We calculate $l_2$ by considering the ages 0, 1, 5, 10, 15, 20 and the values of $l_0,~l_1,~l_5,~l_{10},~l_{15},~l_{20}$ and applying (1).
+    \item We successively calculate $l_x$, ($l_x\not\in D$) by considering its six immediate neighbours. Let $c_x=\lceil x/5\rceil$. Ideally we would consider the ages $x_1=x-3,~x_2=x-2,~x_3=x-1$ and $x_4=5c_x,~x_5=5(c_x+1),~x_6=5(c_x+2)$ (three points on either side) and the value of $l$ at these points (note that these are now available for $2<x<75$).
+    
+However, for $x> 75$, $l_{x_i}$ might not be available for $i\in\{4,~5,~6\}$. In that case, we can compensate for the missing points on the right, with points on the left (as all the points on the left have been previously calculated) For e.g., to calculate $l_{76}$, we would consider the ages 72, 73, 74, 75 on the left and 80, 85 on the right and so on.
+    \item Having calculated $l_x$ for $x\in\{0,~1,\cdots,~85\}$, we find the values of $q_x$, $L_x$ and $e_x$ for $x\in\{2,~3,\cdots,~84\}$, using the below formulae:
+    \begin{align*}
+        q_x&=\frac{l_x-l_{x+1}}{l_x}\\
+        L_x&=l_{x+1}+\frac{l_x-l_{x+1}}{2}~~(\text{assuming uniform deaths in }(x,~x+1))\\
+        e_x&=\frac{\sum_{i=0}^{85-x} L_{x+i}}{l_x}
+    \end{align*}
+    \item We repeat this procedure for the total population, the male population and the female population separately. We then run the same procedure by considering the same divisions in the urban and rural populations (urban total, urban male, urban female and so on). 
+    \item We form complete Life Tables for each of the states mentioned above individually and then over the entire Indian population taken as a whole.
+\end{enumerate}
+
+
+\section*{Complete Life Tables: }
+The life tables have been displayed from the next page. First we start with the entire Indian population (Table 1), and then consider the rural (Table 2) and urban (Table 3) populations. We report the values $q_x$, $l_x$, $L_x$ and $e_x$ for each. Next we do this for each state in alphabetical order.
+
+
+\pagebreak
+# India
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 1
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+\pagebreak
+# Andhra Pradesh
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 2
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Assam
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 3
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Bihar
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 4
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Chhattisgarh
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 5
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Delhi
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 6
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Gujarat
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 7
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Haryana
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 8
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Himachal Pradesh
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 9
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+\pagebreak
+# Jammu and Kashmir
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 10
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0("Jammu and Kashmir : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0("Jammu and Kashmir : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0("Jammu and Kashmir : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+\pagebreak
+# Jharkhand
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 11
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+\pagebreak
+# Karnataka
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 12
+J <- complete.LT(ALT_States[[k]])
+   
+   ##### Total (Row 1)
+   h <- 1
+   caption <- paste0(states[k], " : Total Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Rural (Row 2)
+   h <- 2
+   caption <- paste0(states[k], " : Rural Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+   
+   ##### Urban (Row 3)
+   h <- 3
+   caption <- paste0(states[k], " : Urban Statistics")
+   J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+   
+   colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                  "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+   
+   kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+          format = "latex", escape = F, align = rep("c",12)) %>%
+         add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+         kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Kerala
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 13
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Madhya Pradesh
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 14
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+\pagebreak
+# Maharashtra
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 15
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Odisha
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 16
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Punjab
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 17
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Rajasthan
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 18
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+\pagebreak
+# Tamil Nadu
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 19
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Telangana
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 20
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Uttar Pradesh
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 21
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# Uttarakhand
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 22
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+\pagebreak
+# West Bengal
+
+```{r, echo=FALSE}
+
+options(scipen = 999)
+
+#################### State
+k <- 23
+J <- complete.LT(ALT_States[[k]])
+
+##### Total (Row 1)
+h <- 1
+caption <- paste0(states[k], " : Total Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Rural (Row 2)
+h <- 2
+caption <- paste0(states[k], " : Rural Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
+##### Urban (Row 3)
+h <- 3
+caption <- paste0(states[k], " : Urban Statistics")
+J.h <- cbind(J[[h]][[1]],J[[h]][[2]],J[[h]][[3]])
+
+colnames(J.h) <- rep(c("q\\textsubscript{x}","l\\textsubscript{x}",
+                       "L\\textsubscript{x}","e\\textsubscript{x}"),3)
+
+kbl(J.h, longtable = TRUE, booktabs = TRUE, caption = caption, 
+    format = "latex", escape = F, align = rep("c",12)) %>%
+  add_header_above(c(" ", "Total" = 4, "Male" = 4, "Female" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
