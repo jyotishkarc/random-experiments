@@ -18,11 +18,10 @@ for(k in 1:length(path.images)){
    print(k)
 }
 
-download.file(link.images,
-              path.images,
-              mode = 'wb')
 
-
+# download.file(link.images,
+#               path.images,
+#               mode = 'wb')
 
 # download.file("https://www.isical.ac.in/~conv_pics/images/thumbnail/DSC_3396.jpg",
 #               "trial.jpg", mode = 'wb')
