@@ -15,7 +15,14 @@ f <- function(a,b,c){
 }
 
 f(a,b,c)
-f(a^2,b^2,c^2)
+
+
+
+
+
+
+
+# f(a^2,b^2,c^2)
 
 
 if(FALSE){
