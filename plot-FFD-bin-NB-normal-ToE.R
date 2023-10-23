@@ -7,7 +7,7 @@ library(gtable)
 library(grid)
 
 #####################
-results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_5000_5e3_n5_n5_results.rds")
+results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_10000_5e3_n5_n5_results.rds")
 #####################
 
 #####################
@@ -106,7 +106,7 @@ for(toe in unique(results_rds_metrics$metric)){
 
 #################
 
-ggsave(filename = "plot-FFD-bin-NB-normal-5000-5e3-n5-n5-ToE.pdf", 
+ggsave(filename = "plot-FFD-bin-NB-normal-10000-5e3-n5-n5-ToE.pdf", 
        plot = marrangeGrob(plt, nrow=1, ncol=1,
                            top = quote(grid::textGrob(page.heading[g], 
                                                       gp=grid::gpar(fontsize=20,

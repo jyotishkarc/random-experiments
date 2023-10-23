@@ -6,7 +6,7 @@ library(gridExtra)
 library(katlabutils)
 
 #####################
-results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_5000_5e3_n5_n5_results.rds")
+results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_10000_5e3_n5_n5_results.rds")
 
 results_rds_results <- results_rds$results
 #####################
@@ -106,7 +106,7 @@ for(k in 1:15){
 
 #################
 
-ggsave(filename = "plot-FFD-bin-NB-normal-5000-5e3-n5-n5-QQ.pdf", 
+ggsave(filename = "plot-FFD-bin-NB-normal-10000-5e3-n5-n5-QQ.pdf", 
        plot = marrangeGrob(plt.qq, nrow = 1, ncol = length(varying_params$n),
                            top = quote("")),
        width = 20, height = 7)
