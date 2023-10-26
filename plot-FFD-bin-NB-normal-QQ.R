@@ -6,7 +6,7 @@ library(gridExtra)
 library(katlabutils)
 
 #####################
-results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_10000_5e3_n5_n5_results.rds")
+results_rds <- readRDS("~/R/R Codes/Experiments with R/temp-spacrt-result/grid_explore_FFD_bin_NB_normal_B_20000_5e3_n5_n5_disp_1_only_scoretest_results.rds")
 
 results_rds_results <- results_rds$results
 #####################
@@ -55,6 +55,7 @@ for(i in sort(unique(results_rds_results$grid_id))){
    # chosen <- sample.int(500000, 20000)
    
    (qq_plots_NB[[i]] <- df.qq.proper[[i]] %>%
+         filter(method == 'scoretest_est') %>%
          # filter(run_id %in% chosen) %>%
          # qq_plots[[i]] <- df.slice[[i]] %>%
          ggplot(aes(y = p.value, color = method)) +
@@ -106,7 +107,7 @@ for(k in 1:15){
 
 #################
 
-ggsave(filename = "plot-FFD-bin-NB-normal-10000-5e3-n5-n5-QQ.pdf", 
+ggsave(filename = "plot-FFD-bin-NB-normal-20000-5e3-n5-n5-disp-1-only-scoretest-EST-QQ.pdf", 
        plot = marrangeGrob(plt.qq, nrow = 1, ncol = length(varying_params$n),
                            top = quote("")),
        width = 20, height = 7)
