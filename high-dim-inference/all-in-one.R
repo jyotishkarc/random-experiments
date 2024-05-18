@@ -136,8 +136,8 @@ oper.CLIME.mat
 ################################################ SPICE
 
 compute.spice <- function(X, lambda, q, 
-                          tol = 1e-2, 
-                          max_iter = 5, max_inner_iter = 5) {
+                          tol = 1e-3, 
+                          max_iter = 10, max_inner_iter = 10) {
    n <- nrow(X)
    p <- ncol(X)
    Sigma.samp <- cov(X)
