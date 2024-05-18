@@ -1,4 +1,10 @@
 
+# install.packages('magrittr')
+# install.packages('MASS')
+# install.packages('psych')
+# install.packages('flare')
+# install.packages('FastBandChol')
+
 library('magrittr')
 library('MASS')
 library('psych')
@@ -84,9 +90,9 @@ oper.CLIME.mat <- matrix(NA, nrow = 4, ncol = 2)
 
 for(p in c(30,60)){
    
-   frob.CLIME <- oper.CLIME <- matrix(NA, nrow = 4, ncol = 3)
+   frob.CLIME <- oper.CLIME <- matrix(NA, nrow = 4, ncol = 30)
    
-   for(seed in 1:3){
+   for(seed in 1:30){
       R_1 <- P_1(p,seed)
       R_2 <- P_2(p,seed)
       R_3 <- P_3(p,seed)
@@ -182,24 +188,9 @@ compute.spice <- function(X, lambda, q,
    return(list(Omega.curr, Sigma.samp))
 }
 
-generate.data <- function(n, Sigma) {
-   set.seed(123)
-   p <- ncol(Sigma)
-   X <- MASS::mvrnorm(n, rep(0, p), Sigma)
-   return(X)
-}
-
-spice.res <- function(p, X, q = 1.5) {
-   # Sigma.1 <- matrix(0, p, p)
-   # for(i in 1:p) {
-   #   for(j in 1:p) {
-   #     Sigma.1[i, j] <- 0.7^abs(i-j)
-   #   }
-   # }
-   # X <- generate.data(30, Sigma.1)
+spice.res <- function(p, X, q = 1) {
    lambda <- 0.5
    Omega <- compute.spice(X, lambda, q)[[1]]
-   # accuracy <- sum(diag(Sigma.1 %*% Omega)) - log(det(Sigma.1 %*% Omega)) - nrow(Sigma.1)
    return(Omega)
 }
 
@@ -210,9 +201,9 @@ oper.SPICE.mat <- matrix(NA, nrow = 4, ncol = 2)
 
 for(p in c(30,60)){
    
-   frob.SPICE <- oper.SPICE <- matrix(NA, nrow = 4, ncol = 3)
+   frob.SPICE <- oper.SPICE <- matrix(NA, nrow = 4, ncol = 30)
    
-   for(seed in 1:3){
+   for(seed in 1:30){
       R_1 <- P_1(p,seed)
       R_2 <- P_2(p,seed)
       R_3 <- P_3(p,seed)
@@ -229,8 +220,6 @@ for(p in c(30,60)){
       
       frob.SPICE[1,seed] <- norm(temp-R_1, type = "F")
       oper.SPICE[1,seed] <- norm(temp-R_1, type = "2")
-      # KL.SPICE[1,seed] <- sum(diag(solve(R_1) %*% temp)) - log(det(solve(R_1) %*% temp)) - nrow(solve(R_1))
-      
       
       ## 2
       
@@ -262,6 +251,100 @@ for(p in c(30,60)){
 
 frob.SPICE.mat
 oper.SPICE.mat
+
+
+################################################ CCR
+
+chol_band <- function(X, k) {
+   n = nrow(X)
+   p = ncol(X)
+   k = 1
+   for (i in 1:p){
+      X[,i] = X[,i] - mean(X[,i])
+   }
+   E = matrix(0, nrow = n, ncol = p)
+   L = diag(rep(1, p))
+   d = rep(0, p)
+   E[ ,1] = X[ ,1]
+   for (i in 2:p) {
+      s = max(1, i-k)
+      data = as.data.frame(E[,s:(i-1)])
+      regr = lm(X[,i] ~ 0+., data = data)
+      L[i, s:(i-1)] = regr$coefficients
+      e = regr$residuals
+      E[,i] = e
+      d[i] = n / sum(e * e)
+   }
+   L_inv = solve(L)
+   omega = t(L_inv) %*% diag(d) %*% L_inv
+   return(omega)
+}
+
+########## CCR Implementation
+
+frob.CCR.mat <- matrix(NA, nrow = 4, ncol = 2)
+oper.CCR.mat <- matrix(NA, nrow = 4, ncol = 2)
+
+for(p in c(30,60)){
+   
+   frob.CCR <- oper.CCR <- matrix(NA, nrow = 4, ncol = 30)
+   
+   for(seed in 1:30){
+      R_1 <- P_1(p,seed)
+      R_2 <- P_2(p,seed)
+      R_3 <- P_3(p,seed)
+      
+      X_1 <- mvrnorm(n = n, mu = rep(0,p), Sigma = solve(R_1))
+      X_2 <- mvrnorm(n = n, mu = rep(0,p), Sigma = solve(R_2))
+      X_3 <- mvrnorm(n = n, mu = rep(0,p), Sigma = solve(R_3))
+      X_4 <- mvrnorm(n = n, mu = rep(0,p), Sigma = R_1)
+      
+      
+      ## 1
+      
+      k = 1:20
+      k_opt = banded.chol.cv(X_1, bandwidth = k, folds = 5)$bandwidth.min
+      temp <- chol_band(X_1, k_opt)
+      
+      frob.CCR[1,seed] <- norm(temp-R_1, type = "F")
+      oper.CCR[1,seed] <- norm(temp-R_1, type = "2")
+      
+      ## 2
+      
+      k = 1:20
+      k_opt = banded.chol.cv(X_2, bandwidth = k, folds = 5)$bandwidth.min
+      temp <- chol_band(X_2, k_opt)
+      
+      frob.CCR[2,seed] <- norm(temp-R_2, type = "F")
+      oper.CCR[2,seed] <- norm(temp-R_2, type = "2")
+      
+      ## 3
+      
+      k = 1:20
+      k_opt = banded.chol.cv(X_3, bandwidth = k, folds = 5)$bandwidth.min
+      temp <- chol_band(X_3, k_opt)
+      
+      frob.CCR[3,seed] <- norm(temp-R_3, type = "F")
+      oper.CCR[3,seed] <- norm(temp-R_3, type = "2")
+      
+      ## 4
+      
+      k = 1:20
+      k_opt = banded.chol.cv(X_4, bandwidth = k, folds = 5)$bandwidth.min
+      temp <- chol_band(X_4, k_opt)
+      
+      frob.CCR[4,seed] <- norm(temp-R_1, type = "F")
+      oper.CCR[4,seed] <- norm(temp-R_1, type = "2")
+      
+      cat(paste0("p = ",p,", seed = ",seed,"\n\n"))
+   }
+   
+   frob.CCR.mat[ , which(c(30,60) == p)] <- frob.CCR %>% rowMeans()
+   oper.CCR.mat[ , which(c(30,60) == p)] <- oper.CCR %>% rowMeans()
+}
+
+frob.CCR.mat
+oper.CCR.mat
 
 
 
