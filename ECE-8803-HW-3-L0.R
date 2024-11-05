@@ -3,6 +3,7 @@ library(ggplot2)
 library(latex2exp)
 library(tictoc)
 
+# projection on the set of s-sparse vectors
 proj_sparse <- function(v,s){
   
   abs_ranks <- length(v) + 1 - rank(abs(v))
@@ -13,7 +14,7 @@ proj_sparse <- function(v,s){
   return(v_sort)
 }
 
-
+# projected GD
 proj_GD <- function(X, y, b, theta_0, eta, s, T_max = 100){
   
   theta <- list()
@@ -60,7 +61,19 @@ n <- 2500
 d <- 5000
 s <- floor(sqrt(d))
 
-X_5k <- MASS::mvrnorm(n, mu = rep(0,d), Sigma = diag(rep(1,d)))
+{
+   tic()
+   X_5k_parts <- list()
+   for (i in 1:10) {
+      X_5k_parts[[i]] <- MASS::mvrnorm(n, mu = rep(0,d/10), 
+                                       Sigma = diag(rep(1,d/10)))
+      print(i)
+   }
+   
+   X_5k <- do.call(cbind, X_5k_parts)
+   rm(X_5k_parts)
+   toc()
+}
 
 g <- rnorm(d)
 g[sample(1:d, d-s)] <- 0
@@ -105,7 +118,7 @@ theta_0 = matrix(0, d, 1)
 
 res <- proj_GD(X_10k, y_10k, b_10k,
                theta_0 = theta_0, 
-               eta = 15e-5,
+               eta = 1e-4,
                s = s)
 
 
@@ -136,7 +149,7 @@ theta_0 = matrix(0, d, 1)
 
 res <- proj_GD(X_20k, y_20k, b_20k,
                theta_0 = theta_0, 
-               eta = 10e-5,
+               eta = 1e-4,
                s = s)
 
 
